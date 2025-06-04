@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         Auto select "Tłumaczenie zatwierdzone" on Ctrl+O
+// @name         Toggle "translation_en_verified" checkbox on Ctrl+O (with class toggle)
 // @namespace    http://tampermonkey.net/
-// @version      1.0
-// @description  Wybiera "Tłumaczenie zatwierdzone" jeśli dostępne, inaczej wykonuje domyślną akcję Ctrl+O
+// @version      1.2
+// @description  Przełącza checkbox i klasę "switch" po Ctrl+O / Cmd+O z debug logami i zmianą klasy na "switch checked" lub "switch" w zależności od stanu checkboxa. 
 // @author       Bethink
 // @match        *://*/*
 // @grant        none
@@ -11,36 +11,54 @@
 (function () {
     'use strict';
 
+    console.log('[TM] Tampermonkey script loaded – toggle translation_en_verified on Ctrl+O');
+
     document.addEventListener('keydown', function (e) {
-        const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+        const isMac = navigator.platform.toUpperCase().includes('MAC');
         const ctrlOrCmd = isMac ? e.metaKey : e.ctrlKey;
 
         if (ctrlOrCmd && e.key.toLowerCase() === 'o') {
-            console.log('[TM] Ctrl+O/Cmd+O pressed');
-            const options = document.querySelectorAll('option');
-            let found = false;
+            console.log('[TM] Detected Ctrl+O / Cmd+O press');
+            e.preventDefault(); // blokuje otwieranie pliku
 
-            options.forEach(option => {
-                if (option.textContent.trim() === 'Tłumaczenie zatwierdzone') {
-                    const select = option.parentElement;
-                    if (select && select.tagName.toLowerCase() === 'select') {
-                        console.log('[TM] Found target option, setting value:', option.value);
-                        select.value = option.value;
+            const checkbox = document.getElementById('translation_en_verified');
 
-                        const event = new Event('change', { bubbles: true });
-                        select.dispatchEvent(event);
-
-                        found = true;
-                    }
-                }
-            });
-
-            if (found) {
-                console.log('[TM] Option selected, skipping default Ctrl+O action');
-                e.preventDefault(); // Zapobiega otwarciu dialogu "Open"
-            } else {
-                console.log('[TM] Option not found, proceeding with default Ctrl+O action');
+            if (!checkbox) {
+                console.log('[TM] ❌ Checkbox #translation_en_verified NOT FOUND');
+                return;
             }
+
+            if (checkbox.type !== 'checkbox') {
+                console.log('[TM] ❌ Found element is not a checkbox. Type:', checkbox.type);
+                return;
+            }
+
+            console.log('[TM] ✅ Checkbox found. Current: checked =', checkbox.checked, ', value =', checkbox.value);
+
+            // Przełącz stan checkboxa
+            checkbox.checked = !checkbox.checked;
+            checkbox.value = checkbox.checked ? 'true' : 'false';
+
+            console.log('[TM] 🔄 Checkbox toggled. New: checked =', checkbox.checked, ', value =', checkbox.value);
+
+            // Przełącz klasę diva rodzica
+            const parentDiv = checkbox.closest('.switch');
+            if (parentDiv) {
+                if (checkbox.checked) {
+                    parentDiv.classList.add('checked');
+                    console.log('[TM] 🟢 Parent class updated: switch → switch checked');
+                } else {
+                    parentDiv.classList.remove('checked');
+                    console.log('[TM] ⚪ Parent class updated: switch checked → switch');
+                }
+            } else {
+                console.log('[TM] ⚠️ Parent div with class "switch" not found');
+            }
+
+            // Wywołaj zdarzenie change
+            const event = new Event('change', { bubbles: true });
+            checkbox.dispatchEvent(event);
+            console.log('[TM] 📤 "change" event dispatched');
         }
     });
 })();

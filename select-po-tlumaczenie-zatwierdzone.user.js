@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ctrl/Cmd + O – Ustawienie "Tłumaczenie zatwierdzone"
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      2.0
 // @description  Ustawia opcję "Tłumaczenie zatwierdzone" w select albo wykonuje domyślną akcję Ctrl/Cmd+O
 // @author       Bethink
 // @match        *://*/*

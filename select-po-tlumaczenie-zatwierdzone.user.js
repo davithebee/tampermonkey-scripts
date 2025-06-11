@@ -1,64 +1,44 @@
 // ==UserScript==
-// @name         Toggle "translation_en_verified" checkbox on Ctrl+O (with class toggle)
+// @name         Ctrl/Cmd + O – Ustawienie "Tłumaczenie zatwierdzone"
 // @namespace    http://tampermonkey.net/
-// @version      1.2
-// @description  Przełącza checkbox i klasę "switch" po Ctrl+O / Cmd+O z debug logami i zmianą klasy na "switch checked" lub "switch" w zależności od stanu checkboxa. 
+// @version      1.0
+// @description  Ustawia opcję "Tłumaczenie zatwierdzone" w select albo wykonuje domyślną akcję Ctrl/Cmd+O
 // @author       Bethink
 // @match        *://*/*
 // @grant        none
 // ==/UserScript==
 
 (function () {
-    'use strict';
+  'use strict';
 
-    console.log('[TM] Tampermonkey script loaded – toggle translation_en_verified on Ctrl+O');
+  document.addEventListener('keydown', function (e) {
+    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    const isOpenShortcut = (isMac && e.metaKey && e.key === 'o') || (!isMac && e.ctrlKey && e.key === 'o');
 
-    document.addEventListener('keydown', function (e) {
-        const isMac = navigator.platform.toUpperCase().includes('MAC');
-        const ctrlOrCmd = isMac ? e.metaKey : e.ctrlKey;
+    if (isOpenShortcut) {
+      console.log('Przechwycono skrót otwierania (Ctrl/Cmd+O)');
 
-        if (ctrlOrCmd && e.key.toLowerCase() === 'o') {
-            console.log('[TM] Detected Ctrl+O / Cmd+O press');
-            e.preventDefault(); // blokuje otwieranie pliku
+      e.preventDefault(); // zatrzymujemy domyślne zachowanie (otwieranie pliku/linku)
 
-            const checkbox = document.getElementById('translation_en_verified');
+      const selectName = 'slide_content_editorial_stage_en';
+      const desiredValue = 'translation_approved';
 
-            if (!checkbox) {
-                console.log('[TM] ❌ Checkbox #translation_en_verified NOT FOUND');
-                return;
-            }
-
-            if (checkbox.type !== 'checkbox') {
-                console.log('[TM] ❌ Found element is not a checkbox. Type:', checkbox.type);
-                return;
-            }
-
-            console.log('[TM] ✅ Checkbox found. Current: checked =', checkbox.checked, ', value =', checkbox.value);
-
-            // Przełącz stan checkboxa
-            checkbox.checked = !checkbox.checked;
-            checkbox.value = checkbox.checked ? 'true' : 'false';
-
-            console.log('[TM] 🔄 Checkbox toggled. New: checked =', checkbox.checked, ', value =', checkbox.value);
-
-            // Przełącz klasę diva rodzica
-            const parentDiv = checkbox.closest('.switch');
-            if (parentDiv) {
-                if (checkbox.checked) {
-                    parentDiv.classList.add('checked');
-                    console.log('[TM] 🟢 Parent class updated: switch → switch checked');
-                } else {
-                    parentDiv.classList.remove('checked');
-                    console.log('[TM] ⚪ Parent class updated: switch checked → switch');
-                }
-            } else {
-                console.log('[TM] ⚠️ Parent div with class "switch" not found');
-            }
-
-            // Wywołaj zdarzenie change
-            const event = new Event('change', { bubbles: true });
-            checkbox.dispatchEvent(event);
-            console.log('[TM] 📤 "change" event dispatched');
+      const select = document.querySelector(`select[name="${selectName}"]`);
+      if (select) {
+        console.log(`Znaleziono select o nazwie: ${selectName}`);
+        const option = Array.from(select.options).find(opt => opt.value === desiredValue);
+        if (option) {
+          select.value = desiredValue;
+          select.dispatchEvent(new Event('change', { bubbles: true }));
+          console.log(`Ustawiono wartość "${desiredValue}" dla ${selectName}`);
+        } else {
+          console.log(`Nie znaleziono opcji "${desiredValue}" w ${selectName}`);
         }
-    });
+      } else {
+        console.log(`Nie znaleziono selecta "${selectName}" – wykonanie domyślnej akcji otwierania`);
+        // Przywrócenie domyślnego działania skrótu
+        window.location.href = 'about:blank'; // możesz zmodyfikować lub usunąć jeśli nie chcesz nic robić
+      }
+    }
+  });
 })();

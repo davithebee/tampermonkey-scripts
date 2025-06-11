@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ctrl/Cmd + P – Ustawienie opcji "Po korekcie tłumaczenia"
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      2.0
 // @description  Przechwytuje Ctrl+P / Cmd+P i ustawia "Po korekcie tłumaczenia" lub otwiera okno drukowania
 // @author       Bethink
 // @match        *://*/*

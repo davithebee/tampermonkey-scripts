@@ -1,48 +1,51 @@
 // ==UserScript==
-// @name         Auto select "Po korekcie tłumaczenia" on Ctrl+P
+// @name         Ctrl/Cmd + P – Ustawienie opcji "Po korekcie tłumaczenia"
 // @namespace    http://tampermonkey.net/
 // @version      1.0
-// @description  Wybiera "Po korekcie tłumaczenia" jeśli dostępne, inaczej uruchamia drukowanie
+// @description  Przechwytuje Ctrl+P / Cmd+P i ustawia "Po korekcie tłumaczenia" lub otwiera okno drukowania
 // @author       Bethink
 // @match        *://*/*
 // @grant        none
 // ==/UserScript==
 
 (function () {
-    'use strict';
+  'use strict';
 
-    document.addEventListener('keydown', function (e) {
-        const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-        const ctrlOrCmd = isMac ? e.metaKey : e.ctrlKey;
+  document.addEventListener('keydown', function (e) {
+    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    const isPrintShortcut = (isMac && e.metaKey && e.key === 'p') || (!isMac && e.ctrlKey && e.key === 'p');
 
-        if (ctrlOrCmd && e.key.toLowerCase() === 'p') {
-            console.log('[TM] Ctrl+P/Cmd+P pressed');
-            const options = document.querySelectorAll('option');
-            let found = false;
+    if (isPrintShortcut) {
+      console.log('Przechwycono skrót drukowania');
 
-            options.forEach(option => {
-                if (option.textContent.trim() === 'Po korekcie tłumaczenia') {
-                    const select = option.parentElement;
-                    if (select && select.tagName.toLowerCase() === 'select') {
-                        console.log('[TM] Found target option, setting value:', option.value);
-                        select.value = option.value;
+      e.preventDefault(); // zatrzymujemy domyślne okno drukowania
 
-                        // Trigger change event in case there is logic bound to it
-                        const event = new Event('change', { bubbles: true });
-                        select.dispatchEvent(event);
+      const selectNames = ['slide_content_editorial_stage_en_us', 'slide_content_editorial_stage_en_uk'];
+      const desiredValue = 'translation_reviewed';
+      let found = false;
 
-                        found = true;
-                    }
-                }
-            });
-
-            if (found) {
-                console.log('[TM] Option selected, skipping print dialog');
-                e.preventDefault(); // Prevent print dialog
-            } else {
-                console.log('[TM] Option not found, proceeding with print');
-                // Allow normal print action
-            }
+      selectNames.forEach(name => {
+        const select = document.querySelector(`select[name="${name}"]`);
+        if (select) {
+          console.log(`Znaleziono select o nazwie: ${name}`);
+          const option = Array.from(select.options).find(opt => opt.value === desiredValue);
+          if (option) {
+            select.value = desiredValue;
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+            console.log(`Ustawiono wartość "${desiredValue}" dla ${name}`);
+            found = true;
+          } else {
+            console.log(`Nie znaleziono opcji "${desiredValue}" w ${name}`);
+          }
+        } else {
+          console.log(`Brak selecta o nazwie: ${name}`);
         }
-    });
+      });
+
+      if (!found) {
+        console.log('Nie znaleziono żadnych pasujących selectów — otwieranie okna drukowania');
+        window.print();
+      }
+    }
+  });
 })();

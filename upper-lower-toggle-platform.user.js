@@ -1,9 +1,9 @@
 // ==UserScript==
-// @name         Uppercase/lowercase toggle (tylko /admin/)
+// @name         Uppercase/lowercase toggle (platforma)
 // @namespace    http://tampermonkey.net/
-// @version      1.4
+// @version      1.0
 // @description  Zmienia zaznaczenie na UPPER/lower w zależności od zawartości. Działa tylko na stronach zawierających /admin/. Skrót: Ctrl/Cmd + Shift + U
-// @author       Bethink Support IT
+// @author       Bethink
 // @match        */admin/*
 // @grant        none
 // ==/UserScript==

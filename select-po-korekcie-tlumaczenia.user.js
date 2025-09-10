@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ctrl/Cmd + P – Ustawienie opcji "Po korekcie tłumaczenia"
 // @namespace    http://tampermonkey.net/
-// @version      2.1
+// @version      2.2
 // @description  Przechwytuje Ctrl+P / Cmd+P i ustawia "Po korekcie tłumaczenia" lub otwiera okno drukowania
 // @author       Bethink
 // @match        *://*/*
@@ -20,7 +20,7 @@
 
       e.preventDefault(); // zatrzymujemy domyślne okno drukowania
 
-      var selectNames = ['slide_content_editorial_stage_en_us', 'slide_content_editorial_stage_en_uk'];
+      var selectNames = ['slide_content_editorial_stage_en_us', 'slide_content_editorial_stage_en_uk', 'slide_content_editorial_stage_en'];
       const desiredValue = 'translation_reviewed';
       let found = false;
 
@@ -42,7 +42,7 @@
         }
       });
 
-      selectNames = ['editorial_stage_en_us', 'editorial_stage_en_uk'];
+      selectNames = ['editorial_stage_en_us', 'editorial_stage_en_uk', 'editorial_stage_en'];
 
       selectNames.forEach(name => {
         const select = document.querySelector(`select[name="${name}"]`);

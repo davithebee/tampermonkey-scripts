@@ -1,53 +1,63 @@
 // ==UserScript==
-// @name         Ctrl/Cmd + S - Zapisanie slajdu/przypisu
+// @name         Ctrl/Cmd + S → Zapisz (Bethink admin)
 // @namespace    http://tampermonkey.net/
-// @version      1.0
-// @description  Kliknij "Zapisz" przy Ctrl+S lub Cmd+S
+// @version      1.1
+// @description  Kliknij "Zapisz" (lub "Zapisz slajd/przypis") przy Ctrl+S / Cmd+S
 // @author       Bethink
 // @match        *://*/admin/*
 // @grant        none
+// @run-at       document-end
 // ==/UserScript==
 
-(function() {
-    'use strict';
+(function () {
+  'use strict';
 
-    console.log("[Zapisz Script] Script loaded.");
+  const normalize = s => (s || '').replace(/\s+/g, ' ').trim().toLowerCase();
+  const targets = ['zapisz', 'zapisz slajd', 'zapisz przypis'];
 
-    document.addEventListener('keydown', function(e) {
-        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
-            e.preventDefault();
-            console.log("[Zapisz Script] Ctrl+S lub Cmd+S wykryto.");
+  function visible(el) {
+    const cs = window.getComputedStyle(el);
+    return cs.display !== 'none' && cs.visibility !== 'hidden' && el.offsetParent !== null;
+  }
 
-            let found = false;
+  function findSaveButton() {
+    const nodes = document.querySelectorAll('.ds-button, button, a, [role="button"]');
+    for (const el of nodes) {
+      if (!visible(el)) continue;
+      if (el.closest('[aria-disabled="true"], [disabled]')) continue;
 
-            // Szukaj button z tekstem "Zapisz Slajd"
-            const buttons = document.querySelectorAll("span.ds-button");
-            buttons.forEach(btn => {
-                const text = btn.textContent.trim();
-                console.log("[Zapisz Slajd Script] Sprawdzany przycisk tekst:", text);
+      const t1 = normalize(el.innerText || el.textContent);
+      if (targets.some(t => t === t1 || t1.startsWith(t + ' '))) return el;
 
-                if (text === "Zapisz slajd") {
-                    btn.click();
-                    console.log("[Zapisz Slajd Script] Kliknięto przycisk Zapisz slajd!");
-                    found = true;
-                }
-            });
+      const inner = el.querySelector('.ds-button__content');
+      const t2 = normalize(inner?.innerText || inner?.textContent || '');
+      if (targets.includes(t2)) return el;
+    }
+    return null;
+  }
 
-            // Szukaj <a> z tekstem "Zapisz"
-            const links = document.querySelectorAll("a");
-            links.forEach(link => {
-                const text = link.textContent.trim();
-                console.log("[Zapisz Script] Sprawdzany link tekst:", text);
-                if (text === "Zapisz") {
-                    link.click();
-                    console.log("[Zapisz Script] Kliknięto link Zapisz!");
-                    found = true;
-                }
-            });
+  function clickLikeHuman(el) {
+    el.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true }));
+    el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+    el.click();
+  }
 
-            if (!found) {
-                console.log("[Zapisz Script] Nie znaleziono przycisku ani linku Zapisz.");
-            }
-        }
-    });
+  function onKeyDown(e) {
+    const isSave = (e.ctrlKey || e.metaKey) && normalize(e.key) === 's';
+    if (!isSave) return;
+
+    const btn = findSaveButton();
+    if (btn) {
+      e.preventDefault();
+      e.stopPropagation();
+      clickLikeHuman(btn);
+      console.log('[Zapisz] Kliknięto:', btn);
+    } else {
+      console.log('[Zapisz] Nie znaleziono przycisku/linku "Zapisz".');
+    }
+  }
+
+  // capture:true – żeby nasz handler wykonał się, nawet jeśli appka zatrzymuje eventy wcześniej
+  document.addEventListener('keydown', onKeyDown, true);
 })();

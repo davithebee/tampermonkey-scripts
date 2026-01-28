@@ -26,11 +26,14 @@
     var selectName = 'slide_content_editorial_stage_en';
     const desiredValue = 'translation_reviewed';
 
-    const select = document.querySelector(`select[name="${selectName}"]`);
+    var select = document.querySelector(`select[name="${selectName}"]`);
 
     if (!select) {
       console.log(`[TM] Brak selecta o nazwie: ${selectName} — brak akcji`);
+      
       selectName = 'editorial_stage_en';
+      select = document.querySelector(`select[name="${selectName}"]`);
+      
       if (!select){
         return;
       }

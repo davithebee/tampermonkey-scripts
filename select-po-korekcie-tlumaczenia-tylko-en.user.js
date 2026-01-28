@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ctrl/Cmd + D – Ustawienie "Po korekcie tłumaczenia" (editorial_stage_en)
 // @namespace    http://tampermonkey.net/
-// @version      2.8
+// @version      2.9
 // @description  Przechwytuje Ctrl+D / Cmd+D i ustawia "Po korekcie tłumaczenia" tylko dla editorial_stage_en lub otwiera drukowanie
 // @author       Bethink
 // @match        *://*/*
@@ -23,14 +23,17 @@
 
     e.preventDefault(); // blokujemy domyślną akcję (np. dodanie zakładki)
 
-    const selectName = 'slide_content_editorial_stage_en';
+    var selectName = 'slide_content_editorial_stage_en';
     const desiredValue = 'translation_reviewed';
 
     const select = document.querySelector(`select[name="${selectName}"]`);
 
     if (!select) {
       console.log(`[TM] Brak selecta o nazwie: ${selectName} — brak akcji`);
-      return;
+      selectName = 'editorial_stage_en';
+      if (!select){
+        return;
+      }
     }
 
     console.log(`[TM] Znaleziono select: ${selectName}`);

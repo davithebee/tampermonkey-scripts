@@ -23,7 +23,7 @@
 
     e.preventDefault(); // blokujemy domyślną akcję (np. dodanie zakładki)
 
-    const selectName = 'editorial_stage_en';
+    const selectName = 'slide_content_editorial_stage_en';
     const desiredValue = 'translation_reviewed';
 
     const select = document.querySelector(`select[name="${selectName}"]`);

@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         Ctrl/Cmd + D – Ustawienie opcji "Po korekcie tłumaczenia"
+// @name         Ctrl/Cmd + D – Ustawienie "Po korekcie tłumaczenia" (editorial_stage_en)
 // @namespace    http://tampermonkey.net/
-// @version      2.5
-// @description  Przechwytuje Ctrl+D / Cmd+D i ustawia "Po korekcie tłumaczenia" lub otwiera okno drukowania
+// @version      2.7
+// @description  Przechwytuje Ctrl+D / Cmd+D i ustawia "Po korekcie tłumaczenia" tylko dla editorial_stage_en lub otwiera drukowanie
 // @author       Bethink
 // @match        *://*/*
 // @grant        none
@@ -12,60 +12,41 @@
   'use strict';
 
   document.addEventListener('keydown', function (e) {
-    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-    const isPrintShortcut = (isMac && e.metaKey && e.key === 'd') || (!isMac && e.ctrlKey && e.key === 'd');
+    const isMac = navigator.platform.toUpperCase().includes('MAC');
+    const isShortcut =
+      (isMac && e.metaKey && e.key.toLowerCase() === 'd') ||
+      (!isMac && e.ctrlKey && e.key.toLowerCase() === 'd');
 
-    if (isPrintShortcut) {
-      console.log('Przechwycono skrót drukowania');
+    if (!isShortcut) return;
 
-      e.preventDefault(); // zatrzymujemy domyślne okno drukowania
+    console.log('[TM] Przechwycono Ctrl/Cmd + D');
 
-      var selectNames = ['slide_content_editorial_stage_en'];
-      const desiredValue = 'translation_reviewed';
-      let found = false;
+    e.preventDefault(); // blokujemy domyślną akcję (np. dodanie zakładki)
 
-      selectNames.forEach(name => {
-        const select = document.querySelector(`select[name="${name}"]`);
-        if (select) {
-          console.log(`Znaleziono select o nazwie: ${name}`);
-          const option = Array.from(select.options).find(opt => opt.value === desiredValue);
-          if (option) {
-            select.value = desiredValue;
-            select.dispatchEvent(new Event('change', { bubbles: true }));
-            console.log(`Ustawiono wartość "${desiredValue}" dla ${name}`);
-            found = true;
-          } else {
-            console.log(`Nie znaleziono opcji "${desiredValue}" w ${name}`);
-          }
-        } else {
-          console.log(`Brak selecta o nazwie: ${name}`);
-        }
-      });
+    const selectName = 'editorial_stage_en';
+    const desiredValue = 'translation_reviewed';
 
-      selectNames = ['editorial_stage_en'];
+    const select = document.querySelector(`select[name="${selectName}"]`);
 
-      selectNames.forEach(name => {
-        const select = document.querySelector(`select[name="${name}"]`);
-        if (select) {
-          console.log(`Znaleziono select o nazwie: ${name}`);
-          const option = Array.from(select.options).find(opt => opt.value === desiredValue);
-          if (option) {
-            select.value = desiredValue;
-            select.dispatchEvent(new Event('change', { bubbles: true }));
-            console.log(`Ustawiono wartość "${desiredValue}" dla ${name}`);
-            found = true;
-          } else {
-            console.log(`Nie znaleziono opcji "${desiredValue}" w ${name}`);
-          }
-        } else {
-          console.log(`Brak selecta o nazwie: ${name}`);
-        }
-      });
-
-      if (!found) {
-        console.log('Nie znaleziono żadnych pasujących selectów — otwieranie okna drukowania');
-        window.print();
-      }
+    if (!select) {
+      console.log(`[TM] Brak selecta o nazwie: ${selectName} — brak akcji`);
+      return;
     }
+
+    console.log(`[TM] Znaleziono select: ${selectName}`);
+
+    const optionExists = Array.from(select.options).some(
+      opt => opt.value === desiredValue
+    );
+
+    if (!optionExists) {
+      console.log(`[TM] Brak opcji "${desiredValue}" — brak akcji`);
+      return;
+    }
+
+    select.value = desiredValue;
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+
+    console.log(`[TM] Ustawiono "${desiredValue}" dla ${selectName}`);
   });
 })();

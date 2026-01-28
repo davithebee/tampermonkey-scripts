@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ctrl/Cmd + D – Ustawienie "Po korekcie tłumaczenia" (editorial_stage_en)
 // @namespace    http://tampermonkey.net/
-// @version      2.7
+// @version      2.8
 // @description  Przechwytuje Ctrl+D / Cmd+D i ustawia "Po korekcie tłumaczenia" tylko dla editorial_stage_en lub otwiera drukowanie
 // @author       Bethink
 // @match        *://*/*

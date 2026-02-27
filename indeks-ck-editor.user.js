@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CKEditor: Indeks górny/dolny na skrót
 // @namespace    tampermonkey-ckeditor-supsub
-// @version      1.0.0
+// @version      1.1.0
 // @description  Ctrl/Cmd+Shift+, => indeks dolny; Ctrl/Cmd+Shift+. => indeks górny (CKEditor 5)
 // @match        *://*/*
 // @grant        none
@@ -24,7 +24,6 @@
   function isInCKEditorContext(target) {
     if (!target) return false;
 
-    // Najczęstsze kontenery CKEditor 5
     const inEditor =
       !!target.closest?.('.ck-editor') ||
       !!target.closest?.('.ck-content') ||
@@ -36,7 +35,6 @@
   }
 
   function findButtonByTooltipText(text) {
-    // CKEditor tooltip jest w data-cke-tooltip-text
     const selector = `button.ck.ck-button[data-cke-tooltip-text="${CSS.escape(text)}"]`;
     const btn = document.querySelector(selector);
 
@@ -51,7 +49,6 @@
       return false;
     }
 
-    // Dodatkowy log ze stanem aria-pressed
     log('Klikam przycisk:', tooltipText, {
       ariaPressed: btn.getAttribute('aria-pressed'),
       classes: btn.className
@@ -62,15 +59,22 @@
   }
 
   function handleShortcut(e) {
-    const key = e.key; // ',' albo '.'
-    const ctrlOrCmd = isMacLike() ? e.metaKey : e.ctrlKey;
+    // Nie opieraj się tylko na e.key (zmienia się z Shiftem i układem klawiatury).
+    const code = e.code; // "Comma", "Period", ...
+    const key = e.key;   // ",", ".", "<", ">", ...
 
-    // Wymagamy: Ctrl/Cmd + Shift + (, lub .)
+    // Ctrl/Cmd (bez zgadywania platformy też działa):
+    // - na Mac: metaKey
+    // - na Win/Linux: ctrlKey
+    const ctrlOrCmd = e.ctrlKey || e.metaKey;
+
+    // Wymagamy: Ctrl/Cmd + Shift
     if (!ctrlOrCmd || !e.shiftKey) return;
 
-    // Obsługujemy zarówno ',' jak i '.' (zależy od układu klawiatury i przeglądarki)
-    const isComma = key === ','; // Ctrl/Cmd + Shift + ,
-    const isDot = key === '.';   // Ctrl/Cmd + Shift + .
+    // Najpewniej: code === 'Comma' / 'Period'
+    // Fallback: key może być ',' '.' albo '<' '>' (częste na Windows)
+    const isComma = code === 'Comma' || key === ',' || key === '<';
+    const isDot   = code === 'Period' || key === '.' || key === '>';
 
     if (!isComma && !isDot) return;
 
@@ -78,6 +82,7 @@
     const inContext = isInCKEditorContext(target);
 
     log('Wykryto skrót:', {
+      code,
       key,
       ctrlKey: e.ctrlKey,
       metaKey: e.metaKey,
@@ -87,7 +92,6 @@
       inCKEditorContext: inContext
     });
 
-    // Bezpiecznik: działamy tylko, gdy jesteśmy w CKEditorze (żeby nie psuć skrótów w innych miejscach)
     if (!inContext) {
       log('Pominięto — nie jesteśmy w kontekście CKEditora.');
       return;
@@ -97,20 +101,20 @@
     e.stopPropagation();
 
     if (isComma) {
-      // Indeks dolny
       const ok = clickCKButton('Indeks dolny');
       log('Wynik akcji (Indeks dolny):', ok);
     } else if (isDot) {
-      // Indeks górny
       const ok = clickCKButton('Indeks górny');
       log('Wynik akcji (Indeks górny):', ok);
     }
   }
 
-  // Używamy capture=true, żeby złapać skrót zanim przejmie go CKEditor lub inne listenery
-  window.addEventListener('keydown', handleShortcut, true);
+  // Czasem lepiej łapać na document (bliżej targetów), ale capture=true zostaje.
+  document.addEventListener('keydown', handleShortcut, true);
 
-  log('Skrypt załadowany. Skróty:',
-      (isMacLike() ? 'Cmd' : 'Ctrl') + '+Shift+, => Indeks dolny; ' +
-      (isMacLike() ? 'Cmd' : 'Ctrl') + '+Shift+. => Indeks górny');
+  log(
+    'Skrypt załadowany. Skróty:',
+    (isMacLike() ? 'Cmd' : 'Ctrl') + '+Shift+, => Indeks dolny; ' +
+    (isMacLike() ? 'Cmd' : 'Ctrl') + '+Shift+. => Indeks górny'
+  );
 })();

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ctrl/Cmd + S → Zapisz (Bethink admin)
 // @namespace    http://tampermonkey.net/
-// @version      1.1
+// @version      1.2
 // @description  Kliknij "Zapisz" (lub "Zapisz slajd/przypis") przy Ctrl+S / Cmd+S
 // @author       Bethink
 // @match        *://*/admin/*
@@ -13,7 +13,7 @@
   'use strict';
 
   const normalize = s => (s || '').replace(/\s+/g, ' ').trim().toLowerCase();
-  const targets = ['zapisz', 'zapisz slajd', 'zapisz przypis'];
+  const targets = ['zapisz', 'zapisz slajd', 'zapisz przypis', 'save'];
 
   function visible(el) {
     const cs = window.getComputedStyle(el);
